@@ -143,7 +143,7 @@
       tick.setAttribute("x2", tickEnd.x);
       tick.setAttribute("y2", tickEnd.y);
       tick.setAttribute("stroke", isMajor ? "#7DD3FC" : "#334155");
-      tick.setAttribute("stroke-width", isMajor ? "1.4" : "0.9");
+      tick.setAttribute("stroke-width", isMajor ? "4" : "2");
       baseLayer.appendChild(tick);
 
       const labelPos = hourToXY(h, 126);
@@ -152,7 +152,7 @@
         labelPos.x,
         labelPos.y,
         String(h),
-        isMajor ? "9.5" : "7",
+        isMajor ? "20" : "7.5",
         isMajor ? "#E0F2FE" : "#64748B",
         isMajor ? "700" : "500"
       );
@@ -168,7 +168,7 @@
         labelPos.x,
         labelPos.y,
         String(herH),
-        isMajor ? "8" : "6",
+        isMajor ? "16" : "7.5",
         isMajor ? "#FDBA74" : "#9A3412",
         isMajor ? "700" : "400"
       );
@@ -178,16 +178,16 @@
     const centerBg = document.createElementNS(svgNS, "circle");
     centerBg.setAttribute("cx", 0);
     centerBg.setAttribute("cy", 0);
-    centerBg.setAttribute("r", "26");
+    centerBg.setAttribute("r", "35");
     centerBg.setAttribute("fill", "#0F172A");
     centerBg.setAttribute("stroke", "rgba(251, 146, 60, 0.35)");
-    centerBg.setAttribute("stroke-width", "1.2");
+    centerBg.setAttribute("stroke-width", "2");
     centerLayer.appendChild(centerBg);
 
     const herTimeStr = now.toLocaleTimeString("fr-FR", {
       timeZone: HER_TZ, hour: "2-digit", minute: "2-digit"
     });
-    addText(centerLayer, 0, 0, herTimeStr, "13", "#FDBA74", "700");
+    addText(centerLayer, 0, 0, herTimeStr, "23", "#FDBA74", "700");
 
     // 7. Aiguille rouge en temps réel (pointe sur l'heure actuelle)
     const nowFloat = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;

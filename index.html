@@ -32,13 +32,11 @@
   </svg>
 
 <script>
-  // --- PARAMÈTRES ---
   const MY_START = 9;
   const MY_END = 23;
   const HER_START = 7;
   const HER_END = 22;
   const HER_TZ = "Australia/Sydney";
-  // ------------------
 
   const svgNS = "http://www.w3.org/2000/svg";
   const baseLayer = document.getElementById("layer-base");
@@ -115,11 +113,11 @@
     const now = new Date();
     const offset = getOffsetHours(now, HER_TZ);
 
-    // 1. Anneau extérieur : Toi (bleu clair + bleu foncé 9h-23h)
+    // 1. Anneau extérieur : Toi (9h-23h)
     baseLayer.appendChild(createArc(0, 24, 96, 15, "rgba(56, 189, 248, 0.16)", 1, false));
     baseLayer.appendChild(createArc(MY_START, MY_END, 96, 15, "#38BDF8", 0.95, true));
 
-    // 2. Anneau intérieur : Elle (orange clair + orange foncé 7h-22h ramené à ton heure)
+    // 2. Anneau intérieur : Elle (7h-22h ramené à ton heure)
     const herStartLoc = (((HER_START - offset) % 24) + 24) % 24;
     const herEndLoc = (((HER_END - offset) % 24) + 24) % 24;
     baseLayer.appendChild(createArc(0, 24, 74, 15, "rgba(251, 146, 60, 0.16)", 1, false));
@@ -135,7 +133,7 @@
 
     // 4. Toutes les 24 heures autour du cadran (0 à 23) + petits repères
     for (let h = 0; h < 24; h++) {
-      const isMajor = h % 3 === 0; // 0, 3, 6, 9, 12, 15, 18, 21 mis en avant
+      const isMajor = h % 3 === 0;
       const tickStart = hourToXY(h, 106);
       const tickEnd = hourToXY(h, isMajor ? 111 : 109);
 
@@ -160,19 +158,29 @@
       );
     }
 
-    // 5. Heure chez elle au centre du cadran
+    // 5. Heure chez elle au centre (disque sombre pour détacher de l'aiguille)
+    const centerBg = document.createElementNS(svgNS, "circle");
+    centerBg.setAttribute("cx", 0);
+    centerBg.setAttribute("cy", 0);
+    centerBg.setAttribute("r", "28");
+    centerBg.setAttribute("fill", "#0F172A");
+    centerBg.setAttribute("stroke", "rgba(148, 163, 184, 0.2)");
+    centerBg.setAttribute("stroke-width", "1");
+    centerLayer.appendChild(centerBg);
+
     const herTimeStr = now.toLocaleTimeString("fr-FR", {
       timeZone: HER_TZ, hour: "2-digit", minute: "2-digit"
     });
-    addText(centerLayer, 0, 0, herTimeStr, "18", "#F8FAFC", "700");
+    addText(centerLayer, 0, 0, herTimeStr, "14", "#F8FAFC", "700");
 
-    // 6. Aiguille rouge en temps réel
+    // 6. Aiguille rouge en temps réel (part du bord du disque central jusqu'aux anneaux)
     const nowFloat = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+    const base = hourToXY(nowFloat, 29);
     const tip = hourToXY(nowFloat, 106);
 
     const line = document.createElementNS(svgNS, "line");
-    line.setAttribute("x1", 0);
-    line.setAttribute("y1", 0);
+    line.setAttribute("x1", base.x);
+    line.setAttribute("y1", base.y);
     line.setAttribute("x2", tip.x);
     line.setAttribute("y2", tip.y);
     line.setAttribute("stroke", "#F43F5E");

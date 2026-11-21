@@ -9,114 +9,27 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    min-height: 100%;
+    height: 100%;
     background: #0F172A;
-    color: #F8FAFC;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-  }
-  .card {
-    width: min(92vw, 380px);
-    background: #1E293B;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 24px;
-    padding: 18px 16px 20px;
-    box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-  .badge {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 999px;
-    letter-spacing: 0.2px;
-  }
-  .badge.ok {
-    background: rgba(16, 185, 129, 0.18);
-    color: #34D399;
-    border: 1px solid rgba(52, 211, 153, 0.35);
-  }
-  .badge.no {
-    background: rgba(148, 163, 184, 0.15);
-    color: #CBD5E1;
-    border: 1px solid rgba(148, 163, 184, 0.25);
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
   svg#clock {
-    width: 100%;
-    max-width: 300px;
-    height: auto;
-    aspect-ratio: 1 / 1;
+    width: min(94vw, 94vh, 460px);
+    height: min(94vw, 94vh, 460px);
     display: block;
-  }
-  .legend {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    font-size: 12px;
-  }
-  .leg-item {
-    background: rgba(15, 23, 42, 0.55);
-    border-radius: 12px;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .leg-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    color: #E2E8F0;
-  }
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .leg-sub {
-    color: #94A3B8;
-    font-size: 11px;
-    padding-left: 15px;
-  }
-  .status-line {
-    font-size: 12px;
-    color: #94A3B8;
-    text-align: center;
   }
 </style>
 </head>
 <body>
-  <div class="card">
-    <div id="status-badge" class="badge no">Chargement...</div>
-
-    <svg id="clock" viewBox="-130 -130 260 260">
-      <g id="layer-base"></g>
-      <g id="layer-center"></g>
-      <g id="layer-needle"></g>
-    </svg>
-
-    <div class="legend">
-      <div class="leg-item">
-        <div class="leg-title"><span class="dot" style="background:#38BDF8;"></span>Moi</div>
-        <div class="leg-sub" id="my-info">9h – 23h</div>
-      </div>
-      <div class="leg-item">
-        <div class="leg-title"><span class="dot" style="background:#FB923C;"></span>Elle</div>
-        <div class="leg-sub" id="her-info">7h – 22h</div>
-      </div>
-    </div>
-
-    <div class="status-line" id="extra-info"></div>
-  </div>
+  <svg id="clock" viewBox="-140 -140 280 280">
+    <g id="layer-base"></g>
+    <g id="layer-center"></g>
+    <g id="layer-needle"></g>
+  </svg>
 
 <script>
   // --- PARAMÈTRES ---
@@ -125,7 +38,6 @@
   const HER_START = 7;
   const HER_END = 22;
   const HER_TZ = "Australia/Sydney";
-  const HER_LABEL = "Australie";
   // ------------------
 
   const svgNS = "http://www.w3.org/2000/svg";
@@ -192,14 +104,7 @@
     start = ((start % 24) + 24) % 24;
     end = ((end % 24) + 24) % 24;
     if (start < end) return h >= start && h < end;
-    return h >= start || h < end; // chevauche minuit
-  }
-
-  function formatHourLabel(h) {
-    const norm = Math.round((((h % 24) + 24) % 24) * 10) / 10;
-    const hh = Math.floor(norm);
-    const mm = Math.round((norm - hh) * 60);
-    return mm === 0 ? `${hh}h` : `${hh}h${String(mm).padStart(2, "0")}`;
+    return h >= start || h < end;
   }
 
   function render() {
@@ -210,38 +115,58 @@
     const now = new Date();
     const offset = getOffsetHours(now, HER_TZ);
 
-    // Anneau extérieur : Toi (9h-23h)
-    baseLayer.appendChild(createArc(0, 24, 96, 14, "rgba(56, 189, 248, 0.16)", 1, false));
-    baseLayer.appendChild(createArc(MY_START, MY_END, 96, 14, "#38BDF8", 0.95, true));
+    // 1. Anneau extérieur : Toi (bleu clair + bleu foncé 9h-23h)
+    baseLayer.appendChild(createArc(0, 24, 96, 15, "rgba(56, 189, 248, 0.16)", 1, false));
+    baseLayer.appendChild(createArc(MY_START, MY_END, 96, 15, "#38BDF8", 0.95, true));
 
-    // Anneau intérieur : Elle (7h-22h ramené à ton heure)
+    // 2. Anneau intérieur : Elle (orange clair + orange foncé 7h-22h ramené à ton heure)
     const herStartLoc = (((HER_START - offset) % 24) + 24) % 24;
     const herEndLoc = (((HER_END - offset) % 24) + 24) % 24;
-    baseLayer.appendChild(createArc(0, 24, 76, 14, "rgba(251, 146, 60, 0.16)", 1, false));
-    baseLayer.appendChild(createArc(herStartLoc, herEndLoc, 76, 14, "#FB923C", 0.95, true));
+    baseLayer.appendChild(createArc(0, 24, 74, 15, "rgba(251, 146, 60, 0.16)", 1, false));
+    baseLayer.appendChild(createArc(herStartLoc, herEndLoc, 74, 15, "#FB923C", 0.95, true));
 
-    // Anneau fin vert sur les minutes où vous êtes dispo en même temps
-    const step = 0.25; // pas de 15 min
+    // 3. Liseré vert entre les deux anneaux sur les créneaux communs
+    const step = 0.25;
     for (let t = 0; t < 24; t += step) {
       if (isHourInRange(t, MY_START, MY_END) && isHourInRange(t, herStartLoc, herEndLoc)) {
-        baseLayer.appendChild(createArc(t, t + step, 86, 4, "#34D399", 0.9, false));
+        baseLayer.appendChild(createArc(t, t + step, 85, 3.5, "#34D399", 0.9, false));
       }
     }
 
-    // Repères 0h, 6h, 12h, 18h
-    [0, 6, 12, 18].forEach(h => {
-      const pos = hourToXY(h, 115);
-      addText(baseLayer, pos.x, pos.y, `${h}h`, "9", "#94A3B8", "600");
-    });
+    // 4. Toutes les 24 heures autour du cadran (0 à 23) + petits repères
+    for (let h = 0; h < 24; h++) {
+      const isMajor = h % 3 === 0; // 0, 3, 6, 9, 12, 15, 18, 21 mis en avant
+      const tickStart = hourToXY(h, 106);
+      const tickEnd = hourToXY(h, isMajor ? 111 : 109);
 
-    // Texte central : heure chez elle
+      const tick = document.createElementNS(svgNS, "line");
+      tick.setAttribute("x1", tickStart.x);
+      tick.setAttribute("y1", tickStart.y);
+      tick.setAttribute("x2", tickEnd.x);
+      tick.setAttribute("y2", tickEnd.y);
+      tick.setAttribute("stroke", isMajor ? "#94A3B8" : "#475569");
+      tick.setAttribute("stroke-width", isMajor ? "1.5" : "1");
+      baseLayer.appendChild(tick);
+
+      const labelPos = hourToXY(h, 121);
+      addText(
+        baseLayer,
+        labelPos.x,
+        labelPos.y,
+        String(h),
+        isMajor ? "9.5" : "7.5",
+        isMajor ? "#E2E8F0" : "#64748B",
+        isMajor ? "700" : "500"
+      );
+    }
+
+    // 5. Heure chez elle au centre du cadran
     const herTimeStr = now.toLocaleTimeString("fr-FR", {
       timeZone: HER_TZ, hour: "2-digit", minute: "2-digit"
     });
-    addText(centerLayer, 0, -9, herTimeStr, "17", "#F8FAFC", "700");
-    addText(centerLayer, 0, 9, HER_LABEL, "8.5", "#94A3B8", "500");
+    addText(centerLayer, 0, 0, herTimeStr, "18", "#F8FAFC", "700");
 
-    // Aiguille rouge en temps réel
+    // 6. Aiguille rouge en temps réel
     const nowFloat = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
     const tip = hourToXY(nowFloat, 106);
 
@@ -261,27 +186,6 @@
     cap.setAttribute("r", "3");
     cap.setAttribute("fill", "#F43F5E");
     needleLayer.appendChild(cap);
-
-    // Badge dispo en direct
-    const bothNow = isHourInRange(nowFloat, MY_START, MY_END) && isHourInRange(nowFloat, herStartLoc, herEndLoc);
-    const badge = document.getElementById("status-badge");
-    if (bothNow) {
-      badge.textContent = "Dispo ensemble maintenant";
-      badge.className = "badge ok";
-    } else {
-      badge.textContent = "Pas dispo ensemble là";
-      badge.className = "badge no";
-    }
-
-    // Infos légende & décalage
-    document.getElementById("my-info").textContent = `${MY_START}h–${MY_END}h (toi)`;
-    document.getElementById("her-info").textContent =
-      `${HER_START}h–${HER_END}h (${formatHourLabel(herStartLoc)}–${formatHourLabel(herEndLoc)} ici)`;
-
-    const sign = offset >= 0 ? "+" : "";
-    const roundedOffset = Math.round(offset * 10) / 10;
-    document.getElementById("extra-info").textContent =
-      `Décalage : ${sign}${roundedOffset}h · Vert = créneaux communs`;
   }
 
   render();

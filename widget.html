@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  svg {
+    width: 96vmin;
+    height: 96vmin;
+    max-width: 420px;
+    max-height: 420px;
+  }
+</style>
+</head>
+<body>
+<svg id="clock" viewBox="-120 -120 240 240">
+  <g id="layer-base"></g>
+  <g id="layer-needle"></g>
+</svg>
+
+<script>
+  // --- PARAMÈTRES À ADAPTER ---
+  const MY_START = 9;          // Ton début de dispo (heure locale)
+  const MY_END = 23;           // Ta fin de dispo (heure locale)
+  const HER_START = 7;         // Son début de dispo (heure locale chez elle)
+  const HER_END = 22;          // Sa fin de dispo (heure locale chez elle)
+  const HER_TZ = "Australia/Sydney"; // Fuseau horaire d'elle (ex: Australia/Melbourne, Australia/Perth)
+  // ----------------------------
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const baseLayer = document.getElementById("layer-base");
+  const needleLayer = document.getElementById("layer-needle");
+
+  // Convertit une heure (0 à 24) en coordonnées SVG (0h en haut = -90 deg)
+  function hourToXY(hour, radius) {
+    const angleDeg = (hour / 24) * 360 - 90;
+    const rad = (angleDeg * Math.PI) / 180;
+    return {
+      x: radius * Math.cos(rad),
+      y: radius * Math.sin(rad)
+    };
+  }
+
+  // Dessine un arc de cercle entre startHour et endHour
+  function createArc(startHour, endHour, radius, strokeWidth, color) {
+    let span = endHour - startHour;
+    if (span <= 0) span += 24;
+    if (span >= 24) span = 23.999;
+
+    const p1 = hourToXY(startHour, radius);
+    const p2 = hourToXY(startHour + span, radius);
+    const largeArc = span > 12 ? 1 : 0;
+
+    const path = document.createElementNS(svgNS, "path");
+    const d = `M ${p1.x} ${p1.y} A ${radius} ${radius} 0 ${largeArc} 1 ${p2.x} ${p2.y}`;
+    path.setAttribute("d", d);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", color);
+    path.setAttribute("stroke-width", strokeWidth);
+    path.setAttribute("stroke-linecap", "butt");
+    return path;
+  }
+
+  // Calcule le décalage en heures entre le fuseau d'elle et ton fuseau local
+  function getOffsetHours(now, timeZone) {
+    const localDate = new Date(now.toLocaleString("en-US"));
+    const herDate = new Date(now.toLocaleString("en-US", { timeZone }));
+    return (herDate - localDate) / (1000 * 60 * 60);
+  }
+
+  function renderClock() {
+    baseLayer.innerHTML = "";
+    needleLayer.innerHTML = "";
+
+    const now = new Date();
+    const offset = getOffsetHours(now, HER_TZ);
+
+    // 1. Cercle extérieur : Toi (bleu clair + bleu foncé 9h-23h)
+    baseLayer.appendChild(createArc(0, 24, 92, 18, "#B3DCFF"));
+    baseLayer.appendChild(createArc(MY_START, MY_END, 92, 18, "#0055A4"));
+
+    // 2. Cercle intérieur : Elle (orange clair + orange foncé 7h-22h ramené à ton heure)
+    // Si elle a +10h d'avance, son 7h correspond à (7 - 10) = -3h -> 21h chez toi
+    const herStartLocal = (((HER_START - offset) % 24) + 24) % 24;
+    const herEndLocal = (((HER_END - offset) % 24) + 24) % 24;
+
+    baseLayer.appendChild(createArc(0, 24, 68, 18, "#FFD6AD"));
+    baseLayer.appendChild(createArc(herStartLocal, herEndLocal, 68, 18, "#E65100"));
+
+    // 3. Repères 0h, 6h, 12h, 18h
+    [0, 6, 12, 18].forEach(h => {
+      const pos = hourToXY(h, 108);
+      const txt = document.createElementNS(svgNS, "text");
+      txt.setAttribute("x", pos.x);
+      txt.setAttribute("y", pos.y + 3);
+      txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("font-size", "9");
+      txt.setAttribute("fill", "#444");
+      txt.textContent = h + "h";
+      baseLayer.appendChild(txt);
+    });
+
+    // 4. Aiguille rouge en temps réel (tour complet en 24h)
+    const currentHourFloat = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+    const tip = hourToXY(currentHourFloat, 102);
+
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", 0);
+    line.setAttribute("y1", 0);
+    line.setAttribute("x2", tip.x);
+    line.setAttribute("y2", tip.y);
+    line.setAttribute("stroke", "#FF1744");
+    line.setAttribute("stroke-width", "2.5");
+    line.setAttribute("stroke-linecap", "round");
+    needleLayer.appendChild(line);
+
+    const dot = document.createElementNS(svgNS, "circle");
+    dot.setAttribute("cx", 0);
+    dot.setAttribute("cy", 0);
+    dot.setAttribute("r", "4.5");
+    dot.setAttribute("fill", "#FF1744");
+    needleLayer.appendChild(dot);
+  }
+
+  renderClock();
+  setInterval(renderClock, 30000); // Mise à jour toutes les 30 secondes
+</script>
+</body>
+</html>

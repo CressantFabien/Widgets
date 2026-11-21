@@ -158,21 +158,6 @@
       );
     }
 
-    // 5. Heure chez elle au centre (disque sombre pour détacher de l'aiguille)
-    const centerBg = document.createElementNS(svgNS, "circle");
-    centerBg.setAttribute("cx", 0);
-    centerBg.setAttribute("cy", 0);
-    centerBg.setAttribute("r", "28");
-    centerBg.setAttribute("fill", "#0F172A");
-    centerBg.setAttribute("stroke", "rgba(148, 163, 184, 0.2)");
-    centerBg.setAttribute("stroke-width", "1");
-    centerLayer.appendChild(centerBg);
-
-    const herTimeStr = now.toLocaleTimeString("fr-FR", {
-      timeZone: HER_TZ, hour: "2-digit", minute: "2-digit"
-    });
-    addText(centerLayer, 0, 0, herTimeStr, "14", "#F8FAFC", "700");
-
     // 6. Aiguille rouge en temps réel (part du bord du disque central jusqu'aux anneaux)
     const nowFloat = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
     const base = hourToXY(nowFloat, 29);
